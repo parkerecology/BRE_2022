@@ -73,6 +73,10 @@ xy<-df[c(1,4,5)]
 
 mef<-merge(ssf,xy,by=c("Site_num"))
 
+mef[!complete.cases(mef), ]#site_num 2334 no lat long (drop it)
+
+mef<-subset(mef,mef$Site_num!="2334")
+
 #load raster packages 
 library(rasterVis)
 library(raster)
@@ -115,7 +119,7 @@ cc_250m <- gather(gf,year,cc_250m,cc_250m_2000:cc_250m_2020, factor_key=TRUE)
 # write_csv(cc_250m,"Yearly_canopy_250m.csv")
 
 
-# DAYMET data monthly max temp and min temp ----------------------------------------------------
+# DAYMET data download and formatting monthly precip, max temp and min temp ----------------------------------------------------
 
 library(tidyverse)
 library(patchwork)
@@ -131,17 +135,22 @@ library(viridis)
 
 
 #download the daymet netCDFs subset to western NC
-download_daymet_ncss(location = c(37, -84, 34.5, -81.5),
-                     start = 2000,
-                     end = 2018,
-                     frequency = "monthly",
-                     param = c("tmin","tmax","prcp"),
-                     path = "/Volumes/Seagate Expansion Drive/GIS/USA/NC/Daymet/Monthly aggregate",
-                     silent = TRUE)
+# download_daymet_ncss(location = c(37, -84, 34.5, -81.5),
+#                      start = 1999,
+#                      end = 2020,
+#                      frequency = "monthly",
+#                      param = c("tmin","tmax","prcp"),
+#                      path = "/Volumes/Seagate Expansion Drive/GIS/USA/NC/Daymet/Monthly aggregate",
+#                      silent = TRUE)
+
+
+
+# DAYMET max temp current year --------------------------------------------
 
 setwd("/Volumes/Seagate Expansion Drive/GIS/USA/NC/Daymet/Monthly aggregate")
 
 
+tmax_99<-brick("tmax_monavg_1999_ncss.nc")
 tmax_00<-brick("tmax_monavg_2000_ncss.nc")
 tmax_01<-brick("tmax_monavg_2001_ncss.nc")
 tmax_02<-brick("tmax_monavg_2002_ncss.nc")
@@ -167,6 +176,7 @@ tmax_20<-brick("tmax_monavg_2020_ncss.nc")
 
 
 # to set the correct projection
+raster::projection(tmax_99) <- "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs"
 raster::projection(tmax_00) <- "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs"
 raster::projection(tmax_01) <- "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs"
 raster::projection(tmax_02) <- "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0=-100 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=km +no_defs"
@@ -191,7 +201,8 @@ raster::projection(tmax_20) <- "+proj=lcc +lat_1=25 +lat_2=60 +lat_0=42.5 +lon_0
 
 
 
-# reproject to lat lon
+# re-project to lat lon
+tmax_99 <- raster::projectRaster(tmax_99, crs = "+init=epsg:4326")
 tmax_00 <- raster::projectRaster(tmax_00, crs = "+init=epsg:4326")
 tmax_01 <- raster::projectRaster(tmax_01, crs = "+init=epsg:4326")
 tmax_02 <- raster::projectRaster(tmax_02, crs = "+init=epsg:4326")
@@ -216,7 +227,7 @@ tmax_20 <- raster::projectRaster(tmax_20, crs = "+init=epsg:4326")
 
 
 #check coords for crs match 
-gplot(tmax_20[[4]])+
+gplot(tmax_20[[5]])+
   geom_raster(aes(fill=value))+
   geom_point(
     data=coords,
@@ -224,4 +235,96 @@ gplot(tmax_20[[4]])+
   scale_fill_carto_c(palette = "Geyser",na.value="white")+
   coord_equal()+
   theme_pubr()
+
+
+#one row missing values, which row? (fixed) 
+
+library(leaflet)
+
+leaflet(data = mef) %>% 
+  addProviderTiles(providers$Stamen.Toner) %>%
+  addCircleMarkers(~Long, ~Lat,
+                   radius = ~log(surveys),
+                   color=c("#B3EE3A"),
+                   fillOpacity = 0.5
+  )
+
+
+
+
+
+library(maps)
+v_tmax_99 <- data.frame(terra::extract(tmax_99, coords))
+v_tmax_00 <- data.frame(terra::extract(tmax_00, coords))
+v_tmax_01 <- data.frame(terra::extract(tmax_01, coords))
+v_tmax_02 <- data.frame(terra::extract(tmax_02, coords))
+v_tmax_03 <- data.frame(terra::extract(tmax_03, coords))
+v_tmax_04 <- data.frame(terra::extract(tmax_04, coords))
+v_tmax_05 <- data.frame(terra::extract(tmax_05, coords))
+v_tmax_06 <- data.frame(terra::extract(tmax_06, coords))
+v_tmax_07 <- data.frame(terra::extract(tmax_07, coords))
+v_tmax_08 <- data.frame(terra::extract(tmax_08, coords))
+v_tmax_09 <- data.frame(terra::extract(tmax_09, coords))
+v_tmax_10 <- data.frame(terra::extract(tmax_10, coords))
+v_tmax_11 <- data.frame(terra::extract(tmax_11, coords))
+v_tmax_12 <- data.frame(terra::extract(tmax_12, coords))
+v_tmax_13 <- data.frame(terra::extract(tmax_13, coords))
+v_tmax_14 <- data.frame(terra::extract(tmax_14, coords))
+v_tmax_15 <- data.frame(terra::extract(tmax_15, coords))
+v_tmax_16 <- data.frame(terra::extract(tmax_16, coords))
+v_tmax_17 <- data.frame(terra::extract(tmax_17, coords))
+v_tmax_18 <- data.frame(terra::extract(tmax_18, coords))
+v_tmax_19 <- data.frame(terra::extract(tmax_19, coords))
+v_tmax_20 <- data.frame(terra::extract(tmax_20, coords))
+
+
+#combine into a single dataframe 
+
+tmax_all<-cbind(v_tmax_99,
+                v_tmax_00,
+                v_tmax_01,
+                v_tmax_02,
+                v_tmax_03,
+                v_tmax_04,
+                v_tmax_05,
+                v_tmax_06,
+                v_tmax_07,
+                v_tmax_08,
+                v_tmax_09,
+                v_tmax_10,
+                v_tmax_11,
+                v_tmax_12,
+                v_tmax_13,
+                v_tmax_14,
+                v_tmax_15,
+                v_tmax_16,
+                v_tmax_17,
+                v_tmax_18,
+                v_tmax_19,
+                v_tmax_20)
+
+
+#Check for NAs
+tmax_all[!complete.cases(tmax_all), ]#no NAs
+
+#rename
+names(tmax_all) <- gsub(pattern = "X", replacement = "tmax_", x = names(tmax_all))
+names(tmax_all) <- substring(names(tmax_all),1,12)
+
+#gather vars into long format
+tmax_l <- gather(tmax_all,time,tmax,tmax_1999.01:tmax_2020.12, factor_key=TRUE)
+
+#add new cols for month and year
+tmax_l$Year<-substring(tmax_l$time,6,9)
+tmax_l$month<-substring(tmax_l$time,11,12)
+
+#some formatting
+#tmax_l$Year_d<-as.Date(tmax_l$Year,format="%Y")
+tmax_l$Year_n<-as.numeric(tmax_l$Year)
+
+#change month to numeric 
+tmax_l$month<-as.numeric(tmax_l$month)
+
+#Year t-1
+tmax_l$Year.1<-tmax_l$Year_n-1
 
