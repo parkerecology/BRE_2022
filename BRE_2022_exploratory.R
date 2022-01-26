@@ -1,6 +1,8 @@
 
 
 ### BRE population trends 2022 
+setwd("~/github/BRE_2022/BRE_2022")
+
 
 #import data
 library(readr)
