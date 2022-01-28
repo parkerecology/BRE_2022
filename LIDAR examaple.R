@@ -56,7 +56,7 @@ library(viridis)
 
 gplot(CH) + 
   geom_raster(aes(fill = value)) +
-  scale_fill_gradientn(colours=c("white","white", .colors(50)),values=c(0,0.1,seq(0.1001,1,length.out=10)),na.value = "transparent") +
+  scale_fill_gradientn(colours=c("white","white", height.colors(50)),values=c(0,0.1,seq(0.1001,1,length.out=10)),na.value = "transparent") +
   coord_equal()+
   labs(fill = "Canopy height(ft)")+
   theme_pubr()
