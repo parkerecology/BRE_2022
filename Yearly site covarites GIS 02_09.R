@@ -4,178 +4,186 @@
 #load the tidyverse for pipes etc...
 library(tidyverse)
 
+# 
+# #load observation covs and presence absence data
+# setwd("~/github/BRE_2022/BRE_2022")
+# 
+# 
+# ### BRE population trends 2022 
+# 
+# #import data
+# library(readr)
+# df <- read_csv("Data/BRE surveys_22.csv")
+# View(df)
+# 
+# #change to date format
+# df$survey_date<-as.Date(df$survey_date, format = "%m/%d/%y")#change survey date to date format
+# 
+# #get R to not turn the 2 digit years to future dates, e.g. 1/01/48 is not 1/01/2048, but 1/01/1948
+# df$survey_date<-as.Date(ifelse(df$survey_date > "2021-12-31", format(df$survey_date, "19%y-%m-%d"), format(df$survey_date)))
+# 
+# #make a year column 
+# df$year<-format(df$survey_date,format="%Y")#extract year 
+# df$year<-as.numeric(df$year)#change to numeric
+# 
+# #make julian date column
+# 
+# df$J_date<-format(df$survey_date,format="%j")
+# 
+# #make a surevey ID column
+# 
+# df<-df%>%
+#   mutate(Survey_ID = group_indices(.,survey_date , Site_num))
+# 
+# df<-df%>%
+#   relocate(Survey_ID,.after = Site_num)
+# 
+# #make total green column
+# 
+# df<-df%>%
+#   rowwise()%>%
+#   mutate(total_ANAE=sum(c(num_adult,
+#                           num_juv_subad_yrling,
+#                           num_hatchling),na.rm=TRUE))
+# 
+# df<-df%>%
+#   relocate(total_ANAE,.after = num_eggs)
+# 
+# #to do, clean out early 2000s surveys that had multiple surveys on the same date
+# 
+# 
+# # #cut out PLME 
+# # unique(df$species)#get exact spelling 
+# # 
+# # df<-subset(df,df$species!="Southern Gray-cheeked Salamander")#subset everything that is NOT PLME
+# # 
+# # 
+# 
+# 
+# 
+# #fix site 2224 with the wrong coords
+# 
+# df<-df%>%
+#   mutate(Long=replace(Long, Site_num==2224, -82.700953))%>%
+#   mutate(Lat=replace(Lat, Site_num==2224, 35.101828))
+# 
+# 
+# #drop site 2334 that lacks coordinates, only one survey and no specific date
+# df<-subset(df,df$Site_num!="2334")
+# 
+# 
+# #write cleaned up data to new csv
+# 
+# #write_csv(df,"BRE_2022_clean_01_31.csv")
 
-#load observation covs and presence absence data
 setwd("~/github/BRE_2022/BRE_2022")
 
 
-### BRE population trends 2022 
-
-#import data
 library(readr)
-df <- read_csv("Data/BRE surveys_22.csv")
+df <- read_csv("Data/BRE_2022_02_09_y.csv", 
+               col_types = cols(survey_date = col_date(format = "%Y-%m-%d")))
 View(df)
-
-#change to date format
-df$survey_date<-as.Date(df$survey_date, format = "%m/%d/%y")#change survey date to date format
-
-#get R to not turn the 2 digit years to future dates, e.g. 1/01/48 is not 1/01/2048, but 1/01/1948
-df$survey_date<-as.Date(ifelse(df$survey_date > "2021-12-31", format(df$survey_date, "19%y-%m-%d"), format(df$survey_date)))
-
-#make a year column 
-df$year<-format(df$survey_date,format="%Y")#extract year 
-df$year<-as.numeric(df$year)#change to numeric
-
-#make julian date column
-
-df$J_date<-format(df$survey_date,format="%j")
-
-#make a surevey ID column
-
-df<-df%>%
-  mutate(Survey_ID = group_indices(.,survey_date , Site_num))
-
-df<-df%>%
-  relocate(Survey_ID,.after = Site_num)
-
-#make total green column
-
-df<-df%>%
-  rowwise()%>%
-  mutate(total_ANAE=sum(c(num_adult,
-                          num_juv_subad_yrling,
-                          num_hatchling),na.rm=TRUE))
-
-df<-df%>%
-  relocate(total_ANAE,.after = num_eggs)
-
-#to do, clean out early 2000s surveys that had multiple surveys on the same date
-
-
-# #cut out PLME 
-# unique(df$species)#get exact spelling 
-# 
-# df<-subset(df,df$species!="Southern Gray-cheeked Salamander")#subset everything that is NOT PLME
-# 
-# 
-
-
-
-#fix site 2224 with the wrong coords
-
-df<-df%>%
-  mutate(Long=replace(Long, Site_num==2224, -82.700953))%>%
-  mutate(Lat=replace(Lat, Site_num==2224, 35.101828))
-
-
-#drop site 2334 that lacks coordinates, only one survey and no specific date
-df<-subset(df,df$Site_num!="2334")
-
-
-#write cleaned up data to new csv
-
-#write_csv(df,"BRE_2022_clean_01_31.csv")
           
-#aggregate by year to get number of surveys per year
-
-ef<-
-  df%>%
-  group_by(year)%>%
-  summarise(surveys=n())
+# #aggregate by year to get number of surveys per year
+# 
+# ef<-
+#   df%>%
+#   group_by(year)%>%
+#   summarise(surveys=n())
 
 #make a plot of effort over time 
+# 
+# library(ggplot2)
+# library(ggpubr)
 
-library(ggplot2)
-library(ggpubr)
-
-ggplot(data = ef,aes(year,surveys))+
-  geom_line()+
-  geom_hline(yintercept=20, linetype="dashed", color = "red")+
-  annotate("text", x = 2020, y = 48, label = "20 Surveys",fontface =2)+
-  labs(x="Year", y="Surveys")+
-  theme_pubr()
-
-
-#aggregate by year, site number to get number of surveys per year
-
-sef<-
-  df%>%
-  group_by(year,Site_num)%>%
-  summarise(surveys=n())
-
-#get total number of surveys per site
-ssf<-
-  sef%>%
-  group_by(Site_num)%>%
-  summarise(surveys=sum(surveys))
+# ggplot(data = ef,aes(year,surveys))+
+#   geom_line()+
+#   geom_hline(yintercept=20, linetype="dashed", color = "red")+
+#   annotate("text", x = 2020, y = 48, label = "20 Surveys",fontface =2)+
+#   labs(x="Year", y="Surveys")+
+#   theme_pubr()
+# 
+# 
+# #aggregate by year, site number to get number of surveys per year
+# 
+# sef<-
+#   df%>%
+#   group_by(year,Site_num)%>%
+#   summarise(surveys=n())
+# 
+# #get total number of surveys per site
+# ssf<-
+#   sef%>%
+#   group_by(Site_num)%>%
+#   summarise(surveys=sum(surveys))
 
 
 #get coords for quick map
 
 xy<-df%>%
-  select(c(Site_num,Long,Lat))
-
-mef<-merge(ssf,xy,by=c("Site_num"))
-
-coords<-mef%>%
-  select(c(Long,Lat))
-
-coords<-coords%>%
+  dplyr::select(c(Site_num,Long,Lat))%>%
   distinct()
 
-#load raster packages 
-library(rasterVis)
-library(raster)
-library(rgdal)
-library(terra)
+coords<-xy%>%
+  dplyr::select(c(Long,Lat))
 
-
-
-# MODIS MOD44B.006 VCF percent tree cover ---------------------------------
-
-#avialible here: https://lpdaac.usgs.gov/products/mod44bv006/
-
-#set working directory to netcdf location 
-setwd("/Volumes/Seagate Expansion Drive/GIS/USA/NC/MODIS")
-r_brick<-brick("MOD44B.006_250m_Greens.nc",varname="Percent_Tree_Cover")
-
-r_brick[r_brick>100] <- NA
-
-
-gplot(r_brick[[1]])+
-  geom_raster(aes(fill=value))+
-  geom_point(
-    data=coords,
-    aes(x=Long,y=Lat),col="red")+
-  coord_equal()
-
-values <- data.frame(extract(r_brick, coords))
-names(values) <- gsub(pattern = "X", replacement = "cc_250m_", x = names(values))
-names(values) <- substring(names(values),1,12)
-
-s.no<-data.frame(mef[,c(1,4,3)])
-
-gf <- cbind.data.frame(s.no,values)
-
-cc_250m <- gather(gf,year,cc_250m,cc_250m_2000:cc_250m_2020, factor_key=TRUE)
-
-# setwd("~/github/BRE_2022/BRE_2022/Data")
+# mef<-merge(ssf,xy,by=c("Site_num"))
 # 
-# write_csv(cc_250m,"Yearly_canopy_250m.csv")
+# coords<-mef%>%
+#   select(c(Long,Lat))
+# 
+# coords<-coords%>%
+#   
 
-
-# DAYMET data download and formatting monthly precip, max temp and min temp ----------------------------------------------------
-
-library(tidyverse)
-library(patchwork)
+#load raster packages 
 library(raster)
-library(daymetr)
 library(rasterVis)
+library(terra)
 library(rgdal)
+library(daymetr)
+#library(patchwork)
 library(ggplot2)
 library(ggpubr)
 library(rcartocolor)
 library(viridis)
+
+
+
+
+# MODIS MOD44B.006 VCF percent tree cover ---------------------------------
+# 
+# #avialible here: https://lpdaac.usgs.gov/products/mod44bv006/
+# 
+# #set working directory to netcdf location 
+# setwd("/Volumes/Seagate Expansion Drive/GIS/USA/NC/MODIS")
+# r_brick<-brick("MOD44B.006_250m_Greens.nc",varname="Percent_Tree_Cover")
+# 
+# r_brick[r_brick>100] <- NA
+# 
+# 
+# gplot(r_brick[[1]])+
+#   geom_raster(aes(fill=value))+
+#   geom_point(
+#     data=coords,
+#     aes(x=Long,y=Lat),col="red")+
+#   coord_equal()
+# 
+# values <- data.frame(extract(r_brick, coords))
+# names(values) <- gsub(pattern = "X", replacement = "cc_250m_", x = names(values))
+# names(values) <- substring(names(values),1,12)
+# 
+# s.no<-data.frame(mef[,c(1,4,3)])
+# 
+# gf <- cbind.data.frame(s.no,values)
+# 
+# cc_250m <- gather(gf,year,cc_250m,cc_250m_2000:cc_250m_2020, factor_key=TRUE)
+# 
+# # setwd("~/github/BRE_2022/BRE_2022/Data")
+# # 
+# # write_csv(cc_250m,"Yearly_canopy_250m.csv")
+# 
+
+# DAYMET data download and formatting monthly precip, max temp and min temp ----------------------------------------------------
 
 
 
@@ -286,10 +294,9 @@ gplot(tmax_20[[5]])+
 
 library(leaflet)
 
-leaflet(data = mef) %>% 
+leaflet(data = coords) %>% 
   addProviderTiles(providers$Stamen.Toner) %>%
   addCircleMarkers(~Long, ~Lat,
-                   radius = ~log(surveys),
                    color=c("#B3EE3A"),
                    fillOpacity = 0.5
   )
@@ -348,10 +355,10 @@ tmax_all<-cbind(v_tmax_99,
                 v_tmax_19,
                 v_tmax_20)
 
-tmax_all$Site_num<-unique(mef$Site_num)
+tmax_all$Site_num<-xy$Site_num
 
 #Check for NAs
-tmax_all[!complete.cases(tmax_all), ]#no NAs
+tmax_all[!complete.cases(tmax_all),]#no NAs
 
 #rename
 names(tmax_all) <- gsub(pattern = "X", replacement = "tmax_", x = names(tmax_all))
@@ -361,21 +368,23 @@ tmax_all <- tmax_all%>%
   relocate("Site_num")
 
 #make a copy to convert to previous year's tmax
-tmax_all.1<-tmax_all
-
-names(tmax_all.1[2:265])<-str_replace(names(tmax_all.1[2:265]), substring(names(tmax_all.1[2:265]),6,9), function(x) as.numeric(x) + 1)
-
-names(tmax_all.1)
 
 library(stringr)
-tmax.1_bh<-
-  tmax_all.1%>%
-  select_if(stringr::str_detect(names(.),".06") | 
-              stringr::str_detect(names(.),".07") |
-              stringr::str_detect(names(.),".08") |
-              stringr::str_detect(names(.),".09") |
-              stringr::str_detect(names(.),".10") |
-              stringr::str_detect(names(.),"site_code"))
+
+tmax_all.1<-tmax_all[-c(1)]
+
+names(tmax_all.1) <- str_replace(names(tmax_all.1), substring(names(tmax_all.1),6,9), function(x) as.numeric(x) + 1)
+
+tmax_all.1<- cbind(tmax_all[c(1)],tmax_all.1)
+
+# tmax.1_bh<-
+#   tmax_all.1%>%
+#   select_if(stringr::str_detect(names(.),".06") | 
+#               stringr::str_detect(names(.),".07") |
+#               stringr::str_detect(names(.),".08") |
+#               stringr::str_detect(names(.),".09") |
+#               stringr::str_detect(names(.),".10") |
+#               stringr::str_detect(names(.),"site_code"))
 
 
 
@@ -411,9 +420,14 @@ tmax.1_l$Year_n<-as.numeric(tmax.1_l$Year)
 tmax.1_l$month<-as.numeric(tmax.1_l$month)
 
 
+#make a year measured column 
+tmax.1_l$Year_measured<-tmax.1_l$Year_n-1
+# 
+# #write to csv
+# setwd("~/github/BRE_2022/BRE_2022/Data")
 
-
-
+# write_csv(tmax.1_l,"tmax_past_year_ysc_L.csv")
+# write_csv(tmax_l,"tmax_current_year_ysc_L.csv")
 
 # DAYMET min temp ---------------------------------------------------------
 
@@ -511,16 +525,13 @@ gplot(tmin_20[[5]])+
 
 library(leaflet)
 
-leaflet(data = mef) %>% 
+leaflet(data = xy) %>% 
   addProviderTiles(providers$Stamen.Toner) %>%
   addCircleMarkers(~Long, ~Lat,
-                   radius = ~log(surveys),
+                   #radius = ~log(surveys),
                    color=c("#B3EE3A"),
                    fillOpacity = 0.5
   )
-
-
-
 
 
 library(maps)
@@ -573,7 +584,7 @@ tmin_all<-cbind(v_tmin_99,
                 v_tmin_19,
                 v_tmin_20)
 
-tmin_all$Site_num<-unique(mef$Site_num)
+tmin_all$Site_num<-xy$Site_num
 
 #Check for NAs
 tmin_all[!complete.cases(tmin_all), ]#no NAs
@@ -585,7 +596,68 @@ names(tmin_all) <- substring(names(tmin_all),1,12)
 tmin_all <- tmin_all%>%
   relocate("Site_num")
 
+#make a copy to convert to previous year's tmax
 
+library(stringr)
+
+tmin_all.1<-tmin_all[-c(1)]
+
+names(tmin_all.1) <- str_replace(names(tmin_all.1), substring(names(tmin_all.1),6,9), function(x) as.numeric(x) + 1)
+
+tmin_all.1<- cbind(tmin_all[c(1)],tmin_all.1)
+
+# tmin.1_bh<-
+#   tmin_all.1%>%
+#   select_if(stringr::str_detect(names(.),".06") | 
+#               stringr::str_detect(names(.),".07") |
+#               stringr::str_detect(names(.),".08") |
+#               stringr::str_detect(names(.),".09") |
+#               stringr::str_detect(names(.),".10") |
+#               stringr::str_detect(names(.),"site_code"))
+
+
+
+#gather vars into long format
+tmin_l <- gather(tmin_all,time,tmin,tmin_1999.01:tmin_2020.12, factor_key=TRUE)
+
+#gather previous year vars into long format
+tmin.1_l <- gather(tmin_all.1,time,tmin,tmin_2000.01:tmin_2021.12, factor_key=TRUE)
+
+
+#add new cols for month and year
+tmin_l$Year<-substring(tmin_l$time,6,9)
+tmin_l$month<-substring(tmin_l$time,11,12)
+
+#some formatting
+#tmin_l$Year_d<-as.Date(tmin_l$Year,format="%Y")
+tmin_l$Year_n<-as.numeric(tmin_l$Year)
+
+#change month to numeric 
+tmin_l$month<-as.numeric(tmin_l$month)
+
+#previous year
+
+#add new cols for month and year
+tmin.1_l$Year<-substring(tmin.1_l$time,6,9)
+tmin.1_l$month<-substring(tmin.1_l$time,11,12)
+
+#some formatting
+#tmin.1_l$Year_d<-as.Date(tmin.1_l$Year,format="%Y")
+tmin.1_l$Year_n<-as.numeric(tmin.1_l$Year)
+
+#change month to numeric 
+tmin.1_l$month<-as.numeric(tmin.1_l$month)
+
+
+#make a year measured column 
+tmin.1_l$Year_measured<-tmin.1_l$Year_n-1
+
+# #write to csv
+# setwd("~/github/BRE_2022/BRE_2022/Data")
+# 
+# write_csv(tmin.1_l,"tmin_past_year_ysc_L.csv")
+# write_csv(tmin_l,"tmin_current_year_ysc_L.csv")
+# 
 
 
 # TerraClimate PDSI -------------------------------------------------------
